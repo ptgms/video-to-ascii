@@ -88,4 +88,7 @@ def getdur(file="NONE", total=0):
         exit()
     from moviepy.editor import VideoFileClip
     clip = VideoFileClip(file)
-    return clip.duration / total
+    if clip.duration <= 10:
+        return clip.duration / total
+    else:
+        return 0.03

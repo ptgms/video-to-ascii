@@ -17,6 +17,6 @@ Install the following dependencies:
 - MoviePy (pip3 install moviepy)
 
 ## Usage
-Execute using ´python3 main.py --file {VIDEO FILE} (--audio y/n --clean y/n)´
+Execute using "python3 main.py --file {VIDEO FILE} (--audio y/n --clean y/n)"
 Both optional args default to no.
 The output will be `final_out videoname.py`. Execute that like every other python program to watch the ASCII show.

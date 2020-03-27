@@ -55,7 +55,7 @@ def covertImageToAscii(fileName, cols, scale):
 def frameAscii(file="NONE", out="None", scale=0, col=0, fname=str, prog=int):
     if not fname:
         exit("ERROR!")
-    outFile = "out_" + str(prog) + ".txt"
+    outFile = "cache/out_" + str(prog) + ".txt"
 
     scale = 0.43
     if scale != 0:
@@ -83,12 +83,24 @@ def audioext(file="NONE"):
     clip.audio.write_audiofile("fout_audio.mp3")
 
 
-def getdur(file="NONE", total=0):
+def getdur(file="NONE", total=0, totalfps=10):
     if file == "NONE" or total == 0:
         exit()
     from moviepy.editor import VideoFileClip
     clip = VideoFileClip(file)
-    if clip.duration <= 10:
+    if totalfps != 10:
+        return clip.duration / total
+    elif clip.duration <= 10:
         return clip.duration / total
     else:
-        return 0.03
+        return 0.099
+
+
+def gettotalframes(file="NONE"):
+    if file == "NONE":
+        exit()
+    import cv2
+    cap = cv2.VideoCapture(file)
+    property_id = int(cv2.CAP_PROP_FRAME_COUNT)
+    length = int(cv2.VideoCapture.get(cap, property_id))
+    return length

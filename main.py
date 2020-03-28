@@ -1,15 +1,6 @@
-import sys, random, argparse
-import numpy as np
-import math
-from tqdm import tqdm
+import argparse
 from Tools.bundle import bundle_to_py
-from Tools.frametoascii import *
-from PIL import Image
 from Tools.mp4_lower_fps import *
-
-gscale1 = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
-
-gscale2 = '@%#*+=-:. '
 
 
 def finished(file="NONE"):
@@ -34,6 +25,9 @@ def main():
                                                                       "Usage is --scale int")
     parser.add_argument('--clean', dest='clean', required=False, help="OPTIONAL: Argument to clean previous program "
                                                                       "cache in case of failure. Usage is --clean y/n")
+    parser.add_argument('--toddmode', dest='toddmode', required=False, help="OPTIONAL: Makes the generated ASCII mode "
+                                                                            "7 times the detail. It probably won't "
+                                                                            "look good, so it defaults to n")
     parser.add_argument('--totalframes', dest='totalframes', required=False, help="OPTIONAL: Displays total amount of "
                                                                                   "frames in an Video and then closes"
                                                                                   " the program. Usage is "
@@ -43,12 +37,24 @@ def main():
     args = parser.parse_args()
 
     if args.clean:
-        print("INFO: Got cleanup request, cleaning previous trash... This could take a while!")
-        cleanup(args.vidFile)
-        exit()
+        if str(args.clean) == "yes" or "y":
+            print("INFO: Got cleanup request, cleaning previous trash... This could take a while!")
+            cleanup(args.vidFile)
+            exit()
 
     if args.scale:
-        scale = int(args.scale)
+        cols = 80 * int(args.scale)
+    else:
+        scale = False
+
+    if args.toddmode:
+        if str(args.toddmode) == "yes" or "y":
+            todd = "y"
+            print("INFO: Todd Mode activated. 7 times the detail.")
+        else:
+            todd = "n"
+    else:
+        todd = False
 
     if args.fps:
         tofps = int(args.fps)
@@ -58,13 +64,17 @@ def main():
     videoFile = args.vidFile
 
     if args.totalframes:
-        print("INFO:")
-        print(gettotalframes(videoFile))
-        exit()
+        if str(args.clean) == "yes" or "y":
+            print("INFO:")
+            print(gettotalframes(videoFile))
+            exit()
 
     if args.audio:
-        audioext(videoFile)
-        audio = True
+        if str(args.audio) == "yes" or "y":
+            audioext(videoFile)
+            audio = True
+        else:
+            audio = False
     else:
         audio = False
 
@@ -73,27 +83,33 @@ def main():
         os.remove("final_out " + videoFile + ".py")
 
     if os.path.exists("cache/out_0.txt"):
-        print("Temporary outputs still exist, assuming last attempt unsuccessful, cleaning up...")
-        cleanup(videoFile)
+        print("Temporary outputs still exist, assuming it's all alright, skipping to bundle...")
+        target_frames = len(os.listdir("cache/"))
+        bundle_to_py(videoFile, audio, target_frames)
+        print("Successfully converted, cleaning up...")
+        finished(videoFile)
+        exit(0)
 
     if tofps:
-        total_frames = extract(videoFile, tofps)
-    else:
-        total_frames = extract(videoFile)
-    if total_frames == 0:
-        print("An error occured while extracting the frames. Cleaning up workspace now...")
-        cleanup(videoFile)
-
-    count = 0
-    print("Converting frames to ASCII now...")
-    for i in tqdm(range(total_frames)):
         if args.scale:
-            frameAscii("cache/z_" + videoFile + "_ext_" + str(i) + ".jpg", prog=count, scale=scale)
+            total_frames = extract(videoFile, tofps, toddmode=todd, cols=cols)
         else:
-            frameAscii("cache/z_" + videoFile + "_ext_" + str(i) + ".jpg", prog=count)
-        count = count + 1
+            total_frames = extract(videoFile, tofps, toddmode=todd)
+    else:
+        if args.scale:
+            total_frames = extract(videoFile, toddmode=todd, cols=cols)
+        else:
+            total_frames = extract(videoFile, toddmode=todd)
 
-    bundle_to_py(videoFile, audio, total_frames)
+    if total_frames != 0:
+        print("ERROR: Something has happened during the extraction/conversion. It should be printed out above. "
+              "Cleaning up cache now and exiting...")
+        finished(videoFile)
+        exit(0)
+
+    target_frames = len(os.listdir("cache/"))
+
+    bundle_to_py(videoFile, audio, target_frames)
 
     print("Successfully converted, cleaning up...")
     finished(videoFile)

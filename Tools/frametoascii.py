@@ -1,9 +1,8 @@
 import os
-import sys, random, argparse
 import numpy as np
-import math
+from PIL import Image
 
-gscale1 = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+gscale1 = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,^`'. "
 
 gscale2 = '@%#*+=-:. '
 
@@ -14,12 +13,10 @@ def getAverageL(image):
     return np.average(im.reshape(w * h))
 
 
-from PIL import Image
-
 count = 0
 
 
-def covertImageToAscii(fileName, cols, scale):
+def covertImageToAscii(fileName, cols, scale, ToddMode="n"):
     global gscale1, gscale2
     image = Image.open(fileName).convert('L')
     W, H = image.size[0], image.size[1]
@@ -30,7 +27,7 @@ def covertImageToAscii(fileName, cols, scale):
     rows = int(H / h)
 
     if cols > W or rows > H:
-        print("Image too small for specified cols!")
+        print("Video too small for specified cols!")
         exit(0)
 
     aimg = []
@@ -47,25 +44,24 @@ def covertImageToAscii(fileName, cols, scale):
                 x2 = W
             img = image.crop((x1, y1, x2, y2))
             avg = int(getAverageL(img))
-            gsval = gscale2[int((avg * 9) / 255)]
+            if ToddMode == "y":
+                gsval = gscale1[int((avg * 67) / 255)]
+            else:
+                gsval = gscale2[int((avg * 9) / 255)]
             aimg[j] += gsval
     return aimg
 
 
-def frameAscii(file="NONE", out="None", scale=0, col=0, fname=str, prog=int):
+def frameAscii(file="NONE", out="None", scaler=0, col=80, fname=str, prog=int, ToddMode="n"):
     if not fname:
         exit("ERROR!")
     outFile = "cache/out_" + str(prog) + ".txt"
 
     scale = 0.43
-    if scale != 0:
-        scale = float(scale)
 
-    cols = 80
-    if col != 0:
-        cols = int(cols)
+    cols = col
 
-    aimg = covertImageToAscii(file, cols, scale)
+    aimg = covertImageToAscii(file, cols, scale, ToddMode)
 
     f = open(outFile, 'w')
 
@@ -73,6 +69,7 @@ def frameAscii(file="NONE", out="None", scale=0, col=0, fname=str, prog=int):
         f.write(row + "\n")
 
     f.close()
+    os.remove(file)
 
 
 def audioext(file="NONE"):
@@ -96,11 +93,12 @@ def getdur(file="NONE", total=0, totalfps=10):
         return 0.099
 
 
-def gettotalframes(file="NONE"):
+def gettotalframes(file="NONE", fps=0.1):
     if file == "NONE":
         exit()
     import cv2
     cap = cv2.VideoCapture(file)
+    cap.set(cv2.CAP_PROP_POS_MSEC, 0 * 1000)
     property_id = int(cv2.CAP_PROP_FRAME_COUNT)
     length = int(cv2.VideoCapture.get(cap, property_id))
     return length

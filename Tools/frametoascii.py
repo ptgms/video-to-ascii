@@ -52,7 +52,7 @@ def covertImageToAscii(fileName, cols, scale, ToddMode="n"):
     return aimg
 
 
-def frameAscii(file="NONE", out="None", scaler=0, col=80, fname=str, prog=int, ToddMode="n"):
+def frameAscii(file="NONE", out="None", scaler=0, col=80, fname=str, prog=int, ToddMode="n", outtype="py"):
     if not fname:
         exit("ERROR!")
     outFile = "cache/out_" + str(prog) + ".txt"
@@ -64,20 +64,27 @@ def frameAscii(file="NONE", out="None", scaler=0, col=80, fname=str, prog=int, T
     aimg = covertImageToAscii(file, cols, scale, ToddMode)
 
     f = open(outFile, 'w')
-
-    for row in aimg:
-        f.write(row + "\n")
+    #print("Info: Out type is " + outtype)
+    if outtype == "py":
+        for row in aimg:
+            f.write("\"" + row + r"\n" + "\"")
+    else:
+        for row in aimg:
+            f.write("\"" + row + r"\n" +"\"\n")
 
     f.close()
     os.remove(file)
 
 
-def audioext(file="NONE"):
+def audioext(file="NONE", out="py"):
     if file == "NONE":
         exit()
     import moviepy.editor as mp
     clip = mp.VideoFileClip(file)
-    clip.audio.write_audiofile("fout_audio.mp3")
+    if out == "py":
+        clip.audio.write_audiofile("fout_audio.mp3")
+    else:
+        clip.audio.write_audiofile("fout_audio.wav")
 
 
 def getdur(file="NONE", total=0, totalfps=10):

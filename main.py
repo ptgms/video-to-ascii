@@ -1,5 +1,5 @@
 import argparse
-from Tools.bundle import bundle_to_py
+from Tools.bundle import *
 from Tools.mp4_lower_fps import *
 
 
@@ -9,6 +9,7 @@ def finished(file="NONE"):
 
 # main() function
 def main():
+    out = "cpp"
     # create parser
     descStr = "This program converts an video into ASCII art."
     parser = argparse.ArgumentParser(description=descStr)
@@ -32,6 +33,10 @@ def main():
                                                                                   "frames in an Video and then closes"
                                                                                   " the program. Usage is "
                                                                                   "--totalframes y/n.")
+    parser.add_argument('--outtype', dest='outtype', required=False, help="OPTIONAL: Specify what programming language"
+                                                                          "the export should be. Defaults to"
+                                                                          " python, but cpp can be specified"
+                                                                          "too.")
 
     # parse args
     args = parser.parse_args()
@@ -56,6 +61,16 @@ def main():
     else:
         todd = False
 
+    if args.outtype:
+        if str(args.outtype) == "python":
+            out = "py"
+            print("INFO: Specified export as python script.")
+        elif str(args.outtype) == "cpp":
+            out = "cpp"
+            print("INFO: Specified export as CPP script.")
+    else:
+        out = "py"
+
     if args.fps:
         tofps = int(args.fps)
         print("Got option fps to " + str(tofps))
@@ -71,7 +86,7 @@ def main():
 
     if args.audio:
         if str(args.audio) == "yes" or "y":
-            audioext(videoFile)
+            audioext(videoFile, out)
             audio = True
         else:
             audio = False
@@ -85,21 +100,24 @@ def main():
     if os.path.exists("cache/out_0.txt"):
         print("Temporary outputs still exist, assuming it's all alright, skipping to bundle...")
         target_frames = len(os.listdir("cache/"))
-        bundle_to_py(videoFile, audio, target_frames)
+        if out == "py":
+            bundle_to_py(videoFile, audio, target_frames)
+        else:
+            bundle_to_cpp(videoFile, audio, target_frames)
         print("Successfully converted, cleaning up...")
         finished(videoFile)
         exit(0)
 
     if tofps:
         if args.scale:
-            total_frames = extract(videoFile, tofps, toddmode=todd, cols=cols)
+            total_frames = extract(videoFile, tofps, toddmode=todd, cols=cols, out=out)
         else:
-            total_frames = extract(videoFile, tofps, toddmode=todd)
+            total_frames = extract(videoFile, tofps, toddmode=todd, out=out)
     else:
         if args.scale:
-            total_frames = extract(videoFile, toddmode=todd, cols=cols)
+            total_frames = extract(videoFile, toddmode=todd, cols=cols, out=out)
         else:
-            total_frames = extract(videoFile, toddmode=todd)
+            total_frames = extract(videoFile, toddmode=todd, out=out)
 
     if total_frames != 0:
         print("ERROR: Something has happened during the extraction/conversion. It should be printed out above. "
@@ -109,8 +127,12 @@ def main():
 
     target_frames = len(os.listdir("cache/"))
 
-    bundle_to_py(videoFile, audio, target_frames)
+    print("INFO: Got here with build type " + out)
 
+    if out == "py":
+        bundle_to_py(videoFile, audio, target_frames)
+    else:
+        bundle_to_cpp(videoFile, audio, target_frames)
     print("Successfully converted, cleaning up...")
     finished(videoFile)
     exit(0)

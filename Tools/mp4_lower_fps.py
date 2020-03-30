@@ -4,7 +4,7 @@ from tqdm import tqdm
 from .frametoascii import *
 
 
-def getFrame(sec, file="NONE", frames=0, cols=80, toddmode="n"):
+def getFrame(sec, file="NONE", frames=0, cols=80, toddmode="n", out="py"):
     if file == "NONE":
         return False
     cap = cv2.VideoCapture(file)
@@ -13,11 +13,11 @@ def getFrame(sec, file="NONE", frames=0, cols=80, toddmode="n"):
     if hasFrames:
         cv2.imwrite("cache/z_" + file + "_ext_" + str(frames) + ".jpg", image)
         frameAscii("cache/z_" + file + "_ext_" + str(frames) + ".jpg", prog=frames, col=cols,
-                   ToddMode=toddmode)
+                   ToddMode=toddmode, outtype=out)
     return hasFrames
 
 
-def extract(file="NONE", fps=0.099, cols=80, toddmode="n"):
+def extract(file="NONE", fps=0.099, cols=80, toddmode="n", out="py"):
     current_dir = os.getcwd()
     print("INFO: Current dir is " + current_dir)
     print("INFO: Target FPS is " + str(fps))
@@ -32,7 +32,7 @@ def extract(file="NONE", fps=0.099, cols=80, toddmode="n"):
         for i in tqdm(range(int(cv2.VideoCapture.get(cap, property_id))), unit="pics"):
             sec = sec + frameRate
             sec = round(sec, 2)
-            success = getFrame(sec, file, i, cols, toddmode=toddmode)
+            success = getFrame(sec, file, i, cols, toddmode=toddmode, out=out)
         files = glob.glob("cache/z_" + file + "_ext_*")
         print("INFO: Extraction complete, converted " + str(len(files)) + " frames to ASCII art!")
         cv2.destroyAllWindows()
